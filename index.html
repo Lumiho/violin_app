@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Resonance — Violin Intonation Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:        #1a1410;
+    --bg-2:      #221a14;
+    --panel:     #2b211a;
+    --ink:       #f3e9da;
+    --ink-soft:  #c9b79f;
+    --ink-faint: #8a7860;
+    --line:      #45382c;
+    --gold:      #e0a850;
+    --green:     #8fbf6a;
+    --red:       #d8694e;
+    --amber:     #e0a850;
+    --shadow:    rgba(0,0,0,.45);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0; padding: 0;
+    min-height: 100%;
+    background:
+      radial-gradient(120% 90% at 50% -10%, #2c211a 0%, var(--bg) 55%, #140f0b 100%);
+    color: var(--ink);
+    font-family: "Spline Sans Mono", ui-monospace, monospace;
+    overflow-x: hidden;
+  }
+
+  /* subtle grain */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    opacity: .035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 28px 22px 48px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header { text-align: center; margin-bottom: 6px; }
+
+  .kicker {
+    font-size: 11px;
+    letter-spacing: .42em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(38px, 11vw, 60px);
+    line-height: .92;
+    margin: 0;
+    letter-spacing: -.02em;
+  }
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--gold);
+  }
+
+  .tagline {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin: 12px 0 0;
+  }
+
+  /* ---- meter ---- */
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 18px 0;
+  }
+
+  .meter-shell {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 1 / 0.62;
+  }
+  canvas { width: 100%; height: 100%; display: block; }
+
+  .readout {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 6%;
+    text-align: center;
+    pointer-events: none;
+  }
+  .note {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: clamp(54px, 17vw, 92px);
+    line-height: 1;
+    letter-spacing: -.03em;
+    transition: color .18s ease;
+  }
+  .note .acc { font-size: .5em; vertical-align: .55em; color: var(--gold); margin-left: .02em; }
+  .note .oct { font-size: .34em; vertical-align: .2em; color: var(--ink-faint); margin-left: .06em; }
+
+  .cents {
+    font-size: 14px;
+    letter-spacing: .08em;
+    color: var(--ink-soft);
+    margin-top: 2px;
+    min-height: 18px;
+  }
+  .freq {
+    font-size: 12px;
+    letter-spacing: .14em;
+    color: var(--ink-faint);
+    margin-top: 4px;
+    min-height: 16px;
+  }
+
+  /* idle / status */
+  .idle .note { color: var(--line); }
+
+  /* ---- controls ---- */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+  }
+
+  button.start {
+    font-family: "Spline Sans Mono", monospace;
+    font-size: 13px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: linear-gradient(180deg, #f0bd66, var(--gold));
+    border: none;
+    padding: 16px 40px;
+    border-radius: 2px;
+    cursor: pointer;
+    box-shadow: 0 6px 22px -8px var(--gold), inset 0 1px 0 rgba(255,255,255,.4);
+    transition: transform .12s ease, box-shadow .2s ease, opacity .2s;
+  }
+  button.start:active { transform: translateY(1px) scale(.99); }
+  button.start.running {
+    background: transparent;
+    color: var(--ink-faint);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--ink-faint);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 30px;
+    padding: 7px 13px;
+  }
+  .pill label { color: var(--ink-soft); }
+  .pill button {
+    background: none; border: none; color: var(--gold);
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    padding: 0 4px; line-height: 1;
+  }
+  .pill .val { color: var(--ink); min-width: 38px; text-align: center; }
+
+  .strings {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  }
+  .strings .tag {
+    font-family: "Fraunces", serif; font-style: italic;
+    font-size: 13px; color: var(--ink-faint);
+    padding: 4px 10px; border: 1px solid var(--line); border-radius: 30px;
+    transition: all .15s ease;
+  }
+  .strings .tag.lit {
+    color: var(--bg); background: var(--gold); border-color: var(--gold);
+  }
+
+  .hint {
+    font-family: "Fraunces", serif; font-style: italic;
+    font-size: 13px; color: var(--ink-faint);
+    text-align: center; max-width: 340px; line-height: 1.5;
+    min-height: 20px;
+  }
+
+  footer {
+    margin-top: 26px; text-align: center;
+    font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--line);
+  }
+  footer a { color: var(--ink-faint); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Phase I · Intonation</p>
+    <h1>Reson<em>a</em>nce</h1>
+    <p class="tagline">Hear how true your note rings.</p>
+  </header>
+
+  <div class="stage">
+    <div class="meter-shell">
+      <canvas id="meter"></canvas>
+      <div class="readout idle" id="readout">
+        <div class="note" id="note">—</div>
+        <div class="cents" id="cents">awaiting sound</div>
+        <div class="freq" id="freq"></div>
+      </div>
+    </div>
+
+    <div class="strings" id="strings">
+      <span class="tag" data-f="196.00">G</span>
+      <span class="tag" data-f="293.66">D</span>
+      <span class="tag" data-f="440.00">A</span>
+      <span class="tag" data-f="659.25">E</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="start" id="toggle">Begin Listening</button>
+
+    <div class="row">
+      <span class="pill">
+        <label>A₄</label>
+        <button id="a-down">–</button>
+        <span class="val" id="a-val">440</span>
+        <button id="a-up">+</button>
+        <span style="color:var(--ink-faint)">Hz</span>
+      </span>
+    </div>
+
+    <p class="hint" id="hint">Tap begin, allow the microphone, and play a long open string close to your phone.</p>
+  </div>
+
+  <footer>Built with Web Audio · <a href="https://github.com/ianprime0509/pitchy" target="_blank" rel="noopener">pitchy / MPM</a></footer>
+</div>
+
+<script type="module">
+import { PitchDetector } from "https://esm.sh/pitchy@4";
+
+// ---------- elements ----------
+const canvas   = document.getElementById("meter");
+const ctx      = canvas.getContext("2d");
+const noteEl   = document.getElementById("note");
+const centsEl  = document.getElementById("cents");
+const freqEl   = document.getElementById("freq");
+const readout  = document.getElementById("readout");
+const toggle   = document.getElementById("toggle");
+const hint     = document.getElementById("hint");
+const aVal     = document.getElementById("a-val");
+const strings  = [...document.querySelectorAll("#strings .tag")];
+
+// ---------- state ----------
+let audioCtx, analyser, detector, rafId, stream;
+let buf;                      // Float32Array
+let running = false;
+let a4 = 440;
+const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+
+// smoothing for the needle (cents), eased toward target
+let displayCents = 0, targetCents = 0, hasPitch = false;
+
+// ---------- A4 calibration ----------
+document.getElementById("a-up").onclick   = () => { a4 = Math.min(446, a4 + 1); aVal.textContent = a4; };
+document.getElementById("a-down").onclick = () => { a4 = Math.max(432, a4 - 1); aVal.textContent = a4; };
+
+// ---------- canvas sizing (retina) ----------
+function fitCanvas() {
+  const r = canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  canvas.width  = Math.round(r.width  * dpr);
+  canvas.height = Math.round(r.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", fitCanvas);
+
+// ---------- pitch math ----------
+function freqToNote(freq) {
+  const midi = 69 + 12 * Math.log2(freq / a4);
+  const nearest = Math.round(midi);
+  const cents = (midi - nearest) * 100;
+  const name = NOTE_NAMES[(nearest % 12 + 12) % 12];
+  const octave = Math.floor(nearest / 12) - 1;
+  return { name, octave, cents };
+}
+
+// ---------- audio start/stop ----------
+async function start() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,   // these processors mangle pitch — keep them OFF
+        noiseSuppression: false,
+        autoGainControl: false
+      }
+    });
+  } catch (e) {
+    hint.textContent = "Microphone blocked. Check your browser permissions and try again.";
+    return;
+  }
+
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  await audioCtx.resume();
+  const source = audioCtx.createMediaStreamSource(stream);
+  analyser = audioCtx.createAnalyser();
+  // big window → stable detection down to the open G (~196 Hz)
+  analyser.fftSize = 4096;
+  source.connect(analyser);
+
+  buf = new Float32Array(analyser.fftSize);
+  detector = PitchDetector.forFloat32Array(analyser.fftSize);
+  detector.minVolumeDecibels = -34;   // ignore room hiss
+
+  running = true;
+  toggle.textContent = "Stop";
+  toggle.classList.add("running");
+  hint.textContent = "Play a single sustained note and let it ring.";
+  loop();
+}
+
+function stop() {
+  running = false;
+  cancelAnimationFrame(rafId);
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  if (audioCtx) audioCtx.close();
+  toggle.textContent = "Begin Listening";
+  toggle.classList.remove("running");
+  hasPitch = false;
+  readout.classList.add("idle");
+  noteEl.textContent = "—";
+  centsEl.textContent = "awaiting sound";
+  freqEl.textContent = "";
+  strings.forEach(s => s.classList.remove("lit"));
+  drawMeter(0, false);
+}
+
+toggle.onclick = () => running ? stop() : start();
+
+// ---------- main loop ----------
+function loop() {
+  analyser.getFloatTimeDomainData(buf);
+  const [pitch, clarity] = detector.findPitch(buf, audioCtx.sampleRate);
+
+  if (clarity > 0.93 && pitch > 60 && pitch < 4500) {
+    hasPitch = true;
+    const { name, octave, cents } = freqToNote(pitch);
+    targetCents = Math.max(-50, Math.min(50, cents));
+
+    // readout text
+    const acc = name.includes("#");
+    noteEl.innerHTML =
+      `${name[0]}${acc ? '<span class="acc">♯</span>' : ''}<span class="oct">${octave}</span>`;
+    const dir = cents > 0 ? "sharp" : cents < 0 ? "flat" : "true";
+    const mag = Math.abs(cents) < 5 ? "in tune" : `${Math.abs(Math.round(cents))}¢ ${dir}`;
+    centsEl.textContent = mag;
+    freqEl.textContent = pitch.toFixed(1) + " Hz";
+    readout.classList.remove("idle");
+
+    // colour the note by accuracy
+    const a = Math.abs(cents);
+    noteEl.style.color = a < 5 ? "var(--green)" : a < 18 ? "var(--amber)" : "var(--red)";
+
+    // light the matching open string
+    strings.forEach(s => {
+      const sf = parseFloat(s.dataset.f);
+      const lit = Math.abs(1200 * Math.log2(pitch / sf)) < 45; // within ~45¢
+      s.classList.toggle("lit", lit);
+    });
+  } else {
+    hasPitch = false;
+    centsEl.textContent = "listening…";
+    readout.classList.add("idle");
+    strings.forEach(s => s.classList.remove("lit"));
+  }
+
+  // ease the needle toward target for a smooth, instrument-like swing
+  displayCents += (targetCents - displayCents) * 0.22;
+  drawMeter(displayCents, hasPitch);
+
+  rafId = requestAnimationFrame(loop);
+}
+
+// ---------- meter drawing ----------
+function drawMeter(cents, active) {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h * 0.96;
+  const R  = Math.min(w * 0.46, h * 0.92);
+  const span = Math.PI * 0.78;             // total arc width
+  const start = -Math.PI/2 - span/2;
+  const end   = -Math.PI/2 + span/2;
+
+  // arc track
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#3a2d22";
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, start, end);
+  ctx.stroke();
+
+  // tick marks every 10 cents
+  for (let c = -50; c <= 50; c += 10) {
+    const ang = -Math.PI/2 + (c/50) * (span/2);
+    const major = c === 0;
+    const r1 = R - (major ? 16 : 9);
+    const x1 = cx + Math.cos(ang) * r1, y1 = cy + Math.sin(ang) * r1;
+    const x2 = cx + Math.cos(ang) * R,  y2 = cy + Math.sin(ang) * R;
+    ctx.lineWidth = major ? 2.5 : 1.2;
+    ctx.strokeStyle = major ? "#e0a850" : "#5a4836";
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  }
+
+  // centre "true" zone glow
+  const zone = (15/50) * (span/2);
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = active && Math.abs(cents) < 5
+    ? "rgba(143,191,106,.9)" : "rgba(143,191,106,.18)";
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, -Math.PI/2 - zone, -Math.PI/2 + zone);
+  ctx.stroke();
+
+  // labels
+  ctx.fillStyle = "#6a5642";
+  ctx.font = "11px 'Spline Sans Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("♭", cx + Math.cos(start) * (R + 16), cy + Math.sin(start) * (R + 16) + 4);
+  ctx.fillText("♯", cx + Math.cos(end)   * (R + 16), cy + Math.sin(end)   * (R + 16) + 4);
+
+  // needle
+  const ang = -Math.PI/2 + (cents/50) * (span/2);
+  const nLen = R - 4;
+  const tipX = cx + Math.cos(ang) * nLen;
+  const tipY = cy + Math.sin(ang) * nLen;
+
+  const col = !active ? "#5a4836"
+            : Math.abs(cents) < 5 ? "#8fbf6a"
+            : Math.abs(cents) < 18 ? "#e0a850" : "#d8694e";
+
+  ctx.shadowColor = active ? col : "transparent";
+  ctx.shadowBlur = active ? 14 : 0;
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = col;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(tipX, tipY);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // hub
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#1a1410";
+  ctx.beginPath(); ctx.arc(cx, cy, 2.4, 0, Math.PI*2); ctx.fill();
+}
+
+// ---------- init ----------
+fitCanvas();
+drawMeter(0, false);
+</script>
+</body>
+</html>

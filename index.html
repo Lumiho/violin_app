@@ -150,6 +150,7 @@
     gap: 14px;
     align-items: center;
   }
+  .controls.hidden { display: none; }
 
   button.start {
     font-family: "Spline Sans Mono", monospace;
@@ -216,7 +217,16 @@
     font-family: "Fraunces", serif; font-style: italic;
     font-size: 13px; color: var(--ink-faint);
     text-align: center; max-width: 340px; line-height: 1.5;
+    margin: 8px 0 0 0;
     min-height: 20px;
+  }
+  .tips-link {
+    color: var(--ink-faint);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .tips-link:hover {
+    color: var(--gold);
   }
 
   footer {
@@ -316,7 +326,7 @@
   }
   .phase-tab:hover:not(.active) { color: var(--ink-soft); }
 
-  /* Insights panel (Phase 3) */
+  /* Insights panel (shown on posture tab) */
   .insights {
     width: 100%;
     max-width: 420px;
@@ -384,30 +394,21 @@
     border-color: var(--gold);
     color: var(--bg);
   }
-  .drone-notes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
-  }
-  .drone-note {
+  .drone-select {
     font-family: "Fraunces", serif;
     font-size: 13px;
     padding: 6px 10px;
     border: 1px solid var(--line);
     border-radius: 4px;
-    background: transparent;
-    color: var(--ink-faint);
+    background: var(--panel);
+    color: var(--ink);
     cursor: pointer;
-    transition: all .15s ease;
+    min-width: 80px;
   }
-  .drone-note:hover { border-color: var(--ink-faint); }
-  .drone-note.selected {
-    background: var(--gold);
+  .drone-select:focus {
+    outline: none;
     border-color: var(--gold);
-    color: var(--bg);
   }
-  .drone-note.open-string { font-style: italic; }
   .drone-volume {
     display: flex;
     align-items: center;
@@ -584,7 +585,6 @@
     color: var(--ink-faint);
     cursor: pointer;
     transition: all .15s ease;
-    margin-top: 8px;
   }
   .tips-toggle:hover { border-color: var(--ink-faint); color: var(--ink-soft); }
   .tips-toggle.open { color: var(--gold); border-color: var(--gold); }
@@ -642,7 +642,7 @@
   /* Fingerboard visualization */
   .fingerboard-wrap {
     width: 100%;
-    max-width: 420px;
+    max-width: 520px;
     margin-bottom: 14px;
   }
   .fingerboard-label {
@@ -653,9 +653,36 @@
     margin-bottom: 8px;
     text-align: center;
   }
+  .fingerboard-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .pill-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 8px;
+    gap: 4px;
+    min-width: 48px;
+    border-radius: 8px;
+  }
+  .pill-vertical label {
+    font-size: 9px;
+    letter-spacing: .08em;
+  }
+  .pill-vertical .val {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .pill-vertical button {
+    width: 28px;
+    height: 22px;
+    font-size: 14px;
+  }
   .fingerboard {
     position: relative;
-    width: 100%;
+    flex: 1;
     height: 340px;
     background: linear-gradient(180deg, #2a1f18 0%, #231a14 50%, #1a1310 100%);
     border-radius: 4px 4px 12px 12px;
@@ -909,7 +936,6 @@
   <div class="phase-tabs">
     <button class="phase-tab active" data-phase="pitch">Pitch</button>
     <button class="phase-tab" data-phase="posture">Posture</button>
-    <button class="phase-tab" data-phase="insights">Insights</button>
     <button class="phase-tab" data-phase="stats">Stats</button>
   </div>
 
@@ -946,9 +972,17 @@
     <!-- Fingerboard visualization -->
     <div class="fingerboard-wrap" id="fingerboard-wrap">
       <div class="fingerboard-label">
-        First Position
+        Fingerboard
         <button class="fb-labels-toggle" id="fb-labels-toggle" title="Show note names">♪</button>
       </div>
+      <div class="fingerboard-row">
+        <span class="pill pill-vertical">
+          <label>A₄</label>
+          <button id="a-down">–</button>
+          <span class="val" id="a-val">440</span>
+          <button id="a-up">+</button>
+          <span style="color:var(--ink-faint)">Hz</span>
+        </span>
       <div class="fingerboard" id="fingerboard">
         <div class="fb-nut"></div>
         <div class="fb-strings-area">
@@ -984,9 +1018,17 @@
           <div class="fb-pulse-ring"></div>
         </div>
       </div>
+        <span class="pill pill-vertical">
+          <label>BPM</label>
+          <button id="bpm-down">–</button>
+          <span class="val" id="bpm-val">60</span>
+          <button id="bpm-up">+</button>
+          <button id="metro-toggle" title="Metronome sound">&#128264;</button>
+        </span>
+      </div>
     </div>
 
-    <!-- Insights panel (Phase 3) -->
+    <!-- Insights panel (shown on posture tab) -->
     <div class="insights hidden" id="insights-panel">
       <div class="insight-card" id="insight-main">
         <span class="correlation">Start playing to receive insights.</span>
@@ -1025,27 +1067,7 @@
 
   <div class="controls">
     <button class="start" id="toggle">Begin Listening</button>
-
-    <div class="row">
-      <span class="pill">
-        <label>A₄</label>
-        <button id="a-down">–</button>
-        <span class="val" id="a-val">440</span>
-        <button id="a-up">+</button>
-        <span style="color:var(--ink-faint)">Hz</span>
-      </span>
-      <span class="pill">
-        <label>BPM</label>
-        <button id="bpm-down">–</button>
-        <span class="val" id="bpm-val">60</span>
-        <button id="bpm-up">+</button>
-        <button id="metro-toggle" title="Metronome sound" style="margin-left: 4px;">&#128264;</button>
-      </span>
-    </div>
-
-    <p class="hint" id="hint">Tap begin, allow the microphone, and play a long open string close to your phone.</p>
-
-    <button class="tips-toggle" id="tips-toggle">Setup Tips</button>
+    <p class="hint" id="hint">Tap begin, allow the microphone, and play a long open string close to your phone. <a class="tips-link" id="tips-toggle">Setup Tips</a></p>
 
     <div class="tips-panel" id="tips-panel">
       <h4>Getting the Best Detection</h4>
@@ -1090,18 +1112,22 @@
     <!-- Drone generator -->
     <div class="drone-panel">
       <div class="drone-header">
-        <label>Reference Drone</label>
+        <label for="drone-note">Reference Drone</label>
+        <select id="drone-note" class="drone-select">
+          <optgroup label="Open Strings">
+            <option value="G3">G</option>
+            <option value="D4">D</option>
+            <option value="A4" selected>A</option>
+            <option value="E5">E</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="C4">C</option>
+            <option value="F4">F</option>
+            <option value="Bb4">B♭</option>
+            <option value="Eb4">E♭</option>
+          </optgroup>
+        </select>
         <button class="drone-toggle" id="drone-toggle">Off</button>
-      </div>
-      <div class="drone-notes" id="drone-notes">
-        <button class="drone-note open-string" data-note="G3">G</button>
-        <button class="drone-note open-string" data-note="D4">D</button>
-        <button class="drone-note open-string selected" data-note="A4">A</button>
-        <button class="drone-note open-string" data-note="E5">E</button>
-        <button class="drone-note" data-note="C4">C</button>
-        <button class="drone-note" data-note="F4">F</button>
-        <button class="drone-note" data-note="Bb4">Bb</button>
-        <button class="drone-note" data-note="Eb4">Eb</button>
       </div>
       <div class="drone-volume">
         <label>Volume</label>
@@ -1140,7 +1166,7 @@ const flagWrist      = document.getElementById("flag-wrist");
 const flagViolin     = document.getElementById("flag-violin");
 const meterShell     = document.getElementById("meter-shell");
 
-// Phase 3 elements
+// Insights elements (shown on posture tab)
 const insightsPanel  = document.getElementById("insights-panel");
 const insightMain    = document.getElementById("insight-main");
 
@@ -1158,7 +1184,7 @@ const statsClear     = document.getElementById("stats-clear");
 
 // Drone elements
 const droneToggle    = document.getElementById("drone-toggle");
-const droneNotes     = [...document.querySelectorAll("#drone-notes .drone-note")];
+const droneNoteSelect = document.getElementById("drone-note");
 const droneVolume    = document.getElementById("drone-volume");
 
 // Tips elements
@@ -1191,7 +1217,7 @@ let stableNote = null;
 let stableOctave = null;
 let lastNoteChangeTime = 0;
 
-// Current phase: "pitch" | "posture" | "insights" | "stats"
+// Current phase: "pitch" | "posture" | "stats"
 let currentPhase = "pitch";
 
 // ---------- Drone generator state ----------
@@ -1594,14 +1620,10 @@ function updateDroneFreq() {
 
 droneToggle.onclick = () => droneActive ? stopDrone() : startDrone();
 
-droneNotes.forEach(btn => {
-  btn.onclick = () => {
-    droneNotes.forEach(b => b.classList.remove("selected"));
-    btn.classList.add("selected");
-    selectedDroneNote = btn.dataset.note;
-    updateDroneFreq();
-  };
-});
+droneNoteSelect.onchange = () => {
+  selectedDroneNote = droneNoteSelect.value;
+  updateDroneFreq();
+};
 
 droneVolume.oninput = () => {
   if (droneGain) {
@@ -1973,12 +1995,12 @@ function switchPhase(phase) {
   phaseTabs.forEach(t => t.classList.toggle("active", t.dataset.phase === phase));
 
   // Show/hide elements based on phase
-  const showCamera = phase === "posture" || phase === "insights";
-  const showMeter = phase === "pitch" || phase === "insights";
-  const showFlags = phase === "posture" || phase === "insights";
-  const showInsights = phase === "insights";
+  const showCamera = phase === "posture";
+  const showMeter = phase === "pitch";
+  const showFlags = phase === "posture";
+  const showInsights = phase === "posture"; // Insights merged into posture
   const showStats = phase === "stats";
-  const showFingerboard = phase === "pitch" || phase === "insights";
+  const showFingerboard = phase === "pitch";
 
   cameraPanel.classList.toggle("hidden", !showCamera);
   meterShell.classList.toggle("hidden", !showMeter);
@@ -1987,6 +2009,7 @@ function switchPhase(phase) {
   statsPanel.classList.toggle("hidden", !showStats);
   fingerboardWrap.classList.toggle("hidden", !showFingerboard);
   document.getElementById("strings").classList.toggle("hidden", phase === "posture" || phase === "stats");
+  document.querySelector(".controls").classList.toggle("hidden", phase === "stats");
 
   // Start/stop camera as needed
   if (showCamera && !visionRunning && running) {
@@ -2240,16 +2263,14 @@ function visionLoop() {
     const flags = analyzePosture(poseResults.landmarks, handResults.landmarks);
     updatePostureUI(flags);
 
-    // Record for correlation (Phase 3)
-    if (currentPhase === "insights" || currentPhase === "posture") {
+    // Record for correlation and update insights
+    if (currentPhase === "posture") {
       recordObservation(
         hasPitch ? freqToNote(lastPitch) : null,
         hasPitch ? lastCents : 0,
         flags
       );
-      if (currentPhase === "insights") {
-        updateInsightsUI();
-      }
+      updateInsightsUI();
     }
   }
 
@@ -2308,8 +2329,8 @@ async function start() {
   toggle.classList.add("running");
   hint.textContent = "Play a single sustained note and let it ring.";
 
-  // Start vision if on posture or insights tab
-  if (currentPhase === "posture" || currentPhase === "insights") {
+  // Start vision if on posture tab
+  if (currentPhase === "posture") {
     startVision();
   }
 

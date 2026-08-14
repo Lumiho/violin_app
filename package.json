@@ -1,0 +1,22 @@
+{
+  "name": "violin_app",
+  "version": "1.0.0",
+  "description": "Resonance — Violin Practice Trainer",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["violin", "tuner", "music", "practice"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  },
+  "dependencies": {
+    "pitchy": "^4.1.0",
+    "@mediapipe/tasks-vision": "^0.10.18"
+  }
+}

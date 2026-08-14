@@ -1,1 +1,19 @@
+# Dependencies
+node_modules
+.env
+
+# Build output
+dist
+
+# Editor
+.vscode
+.claude
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
 /vocal.md

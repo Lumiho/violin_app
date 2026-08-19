@@ -32,7 +32,12 @@
   vite-env.d.ts # Ambient declarations (CSS modules, etc.)
 /api
   ask.py        # Backend endpoint
+  requirements.txt # use 'pip install -r api/requirements.txt' to install after (powershell activation) .\.venv\Scripts\activate
 ```
+## Resources:
+- Flask api: https://pytutorial.com/flask-approute-guide-define-url-routes-like-a-pro/
+- anthropic python sdk: https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python
+
 
 ### Key config files
 - `package.json` - dependencies, scripts (`npm run dev`, `npm run build`)

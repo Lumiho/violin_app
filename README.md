@@ -4,7 +4,7 @@
 
 **Real-time violin practice companion with AI-powered feedback**
 
-A browser-based tool for self-teaching violinists that provides instant intonation feedback, posture analysis, and personalized insights — like having a teacher watch over your shoulder.
+A tool for self-teaching violinists that provides instant intonation feedback, posture analysis, and personalized insights — like having a teacher watch over your shoulder.
 
 [Features](#features) · [Getting Started](#getting-started) · [How It Works](#how-it-works) · [Tech Stack](#tech-stack)
 
@@ -16,7 +16,23 @@ A browser-based tool for self-teaching violinists that provides instant intonati
 
 Resonance combines real-time pitch detection with computer vision to help violinists practice more effectively. It listens to your playing, watches your form, and identifies patterns between the two — alerting you when posture issues affect your intonation.
 
-**No installation required.** Open it in a browser, grant microphone/camera access, and start practicing.
+Open it in a browser, grant microphone/camera access, and start practicing.
+## Project Structure
+
+```
+/src
+  main.ts       # App code (TypeScript)
+  types.ts      # Shared type definitions
+  styles.css    # Styles
+  vite-env.d.ts # Ambient declarations
+/api
+  ask.py        # Flask backend for AI coach
+  notes.md      # Learning notes
+  requirements.txt
+index.html      # Entry point
+vite.config.ts  # Vite configuration
+tsconfig.json   # TypeScript configuration
+```
 
 ## Features
 
@@ -59,6 +75,12 @@ Track your progress over time:
 - **"Notes to Practice"** section highlights your problem areas
 - **Persistent storage** — stats saved to localStorage across sessions
 
+### AI Coach (In Development)
+Ask questions about your practice and get personalized feedback:
+- Analyzes your pitch accuracy data and posture flags
+- Provides contextual advice based on your playing patterns
+- Powered by Claude API via Flask backend
+
 ### User Interface
 - **Tabbed layout**: Pitch / Posture / Insights / Stats
 - **Dark, warm aesthetic** designed for low-light practice rooms
@@ -67,19 +89,38 @@ Track your progress over time:
 
 ## Getting Started
 
-### Quick Start
-1. Open `index.html` in a modern browser (Chrome or Edge recommended)
-2. Click **Start** to begin
-3. Grant microphone and camera permissions when prompted
-4. Start playing!
-
-### Deploy to GitHub Pages
+### Frontend Setup
 ```bash
-git clone https://github.com/your-username/resonance.git
-cd resonance
-# Push to GitHub, enable Pages in repository settings
-# Your app will be live at https://your-username.github.io/resonance
+npm install          # Install dependencies
+npm run dev          # Start Vite dev server
 ```
+
+### Backend Setup (AI Coach)
+```bash
+cd api
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1   # Windows PowerShell
+# source .venv/bin/activate    # Mac/Linux
+pip install -r requirements.txt
+```
+
+Set your API key:
+```bash
+set ANTHROPIC_API_KEY=your-key-here   # Windows
+# export ANTHROPIC_API_KEY=your-key   # Mac/Linux
+```
+
+Run Flask:
+```bash
+flask --app ask run
+```
+
+### Quick Start
+1. Start both frontend (`npm run dev`) and backend (`flask --app ask run`)
+2. Open the dev server URL in browser (Chrome or Edge recommended)
+3. Click **Start** to begin
+4. Grant microphone and camera permissions when prompted
+5. Start playing!
 
 ### Browser Requirements
 | Browser | Support |
@@ -122,7 +163,9 @@ cd resonance
 
 | Component | Technology |
 |-----------|------------|
-| Frontend | Vanilla HTML/CSS/JS (single file, zero build step) |
+| Frontend | TypeScript + Vite |
+| Backend | Flask (Python) |
+| AI | Anthropic Claude API |
 | Audio Input | Web Audio API (`getUserMedia` + `AnalyserNode`) |
 | Pitch Detection | [pitchy](https://github.com/ianprime0509/pitchy) (McLeod Pitch Method) |
 | Computer Vision | [MediaPipe Tasks Vision](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker) |
@@ -131,33 +174,40 @@ cd resonance
 
 ### Dependencies
 
-All dependencies loaded from CDN (no npm install required):
+**Frontend (npm):**
+- `vite` - Build tool and dev server
+- `typescript` - Type checking
+- `pitchy` - Pitch detection
+- `@mediapipe/tasks-vision` - Pose/hand tracking
 
-```
-pitchy           → esm.sh
-@mediapipe/tasks-vision → esm.sh + jsDelivr (WASM binaries)
-```
+**Backend (pip):**
+- `flask` - Web framework
+- `anthropic` - Claude API SDK
 
-#### Offline Use
-1. Download `pitchy` and save as `pitchy.js`
-2. Download MediaPipe Tasks Vision bundle and WASM files
-3. Update import paths in `index.html` to local files
-
-## Project Structure
+## Architecture
 
 ```
 resonance/
-├── index.html    # Complete application (HTML + CSS + JS)
-├── README.md     # This file
-└── .gitignore    # Git ignore rules
+├── src/
+│   ├── main.ts        # Main application logic
+│   ├── types.ts       # TypeScript interfaces
+│   └── styles.css     # Styling
+├── api/
+│   ├── ask.py         # Flask endpoint for AI coach
+│   └── requirements.txt
+├── index.html         # Entry point
+├── vite.config.ts     # Vite config
+├── tsconfig.json      # TypeScript config
+└── package.json       # Node dependencies
 ```
 
-Yes, the entire app is a single HTML file. No bundler, no framework, no build step.
+Frontend built with Vite + TypeScript. Backend uses Flask to proxy requests to Claude API.
 
 ## Contributing
 
 Contributions are welcome! Some ideas for future development:
 
+- [ ] AI coach tools (set drone, adjust metronome, start drills)
 - [ ] PWA support for offline use
 - [ ] Recording and playback of practice sessions
 - [ ] Scale and arpeggio practice modes
@@ -168,7 +218,7 @@ Contributions are welcome! Some ideas for future development:
 To contribute:
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes to `index.html`
+3. Make your changes in `src/`
 4. Test in multiple browsers
 5. Submit a pull request
 

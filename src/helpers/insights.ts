@@ -143,3 +143,10 @@ export function updateInsightsUI(): void {
 	insightMain.className = 'insight-card';
   }
 }
+
+export function clearObservations(): void {
+  observations.length = 0;
+  currentInsight = null;
+  insightCooldown = 0;
+  updateInsightsUI();
+}

@@ -87,3 +87,22 @@ export interface Landmark {
 //   }
 // }
 
+// ---------- Posture heuristics ----------
+export const POSE = {
+  LEFT_SHOULDER: 11,
+  RIGHT_SHOULDER: 12,
+  LEFT_EAR: 7,
+  RIGHT_EAR: 8,
+  LEFT_ELBOW: 13,
+  LEFT_WRIST: 15,
+  LEFT_HIP: 23,
+  RIGHT_HIP: 24,
+  NOSE: 0
+};
+
+export const postureState = {
+  shoulderRaised: false,
+  wristCollapsed: false,
+  violinDrooping: false,
+  lastUpdate: 0
+};

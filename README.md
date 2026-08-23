@@ -21,17 +21,28 @@ Open it in a browser, grant microphone/camera access, and start practicing.
 
 ```
 /src
-  main.ts       # App code (TypeScript)
-  types.ts      # Shared type definitions
-  styles.css    # Styles
-  vite-env.d.ts # Ambient declarations
+  main.ts           # App entry point, event handlers, main loop
+  types.ts          # Shared type definitions
+  shared.ts         # Shared DOM elements and utilities
+  /features
+    audio.ts        # Pitch/frequency utilities (freqToNote, noteToFreq)
+    drone.ts        # Drone generator (start, stop, volume, note selection)
+    vision.ts       # MediaPipe camera/pose detection
+    posture.ts      # Posture analysis and UI flags
+    insights.ts     # Correlated pitch/posture insights
+    stats.ts        # Practice statistics tracking
+  /cosmetic
+    cosmetics.ts    # Visual rendering (meter, fingerboard)
+	styles.css		# css styling file
+  /api
+    ask.ts          # Frontend API call to Flask backend
+    notes.md        # Learning notes
 /api
-  ask.py        # Flask backend for AI coach
-  notes.md      # Learning notes
+  ask.py            # Flask backend for AI coach
   requirements.txt
-index.html      # Entry point
-vite.config.ts  # Vite configuration
-tsconfig.json   # TypeScript configuration
+index.html          # Entry point
+vite.config.ts      # Vite configuration
+tsconfig.json       # TypeScript configuration
 ```
 
 ## Features
@@ -75,9 +86,10 @@ Track your progress over time:
 - **"Notes to Practice"** section highlights your problem areas
 - **Persistent storage** — stats saved to localStorage across sessions
 
-### AI Coach (In Development)
+### AI Coach
 Ask questions about your practice and get personalized feedback:
-- Analyzes your pitch accuracy data and posture flags
+- **"Ask Coach" button** in the Stats tab sends your data to Claude
+- Analyzes your pitch accuracy data and current posture flags
 - Provides contextual advice based on your playing patterns
 - Powered by Claude API via Flask backend
 
@@ -189,16 +201,28 @@ flask --app ask run
 ```
 resonance/
 ├── src/
-│   ├── main.ts        # Main application logic
-│   ├── types.ts       # TypeScript interfaces
-│   └── styles.css     # Styling
+│   ├── main.ts            # Entry point, event handlers, main loop
+│   ├── types.ts           # TypeScript interfaces
+│   ├── shared.ts          # Shared DOM elements (canvas, buttons)
+│   ├── styles.css         # Styling
+│   ├── features/          # Feature modules
+│   │   ├── audio.ts       # Pitch utilities
+│   │   ├── drone.ts       # Drone generator
+│   │   ├── vision.ts      # MediaPipe integration
+│   │   ├── posture.ts     # Posture analysis
+│   │   ├── insights.ts    # Pitch/posture correlation
+│   │   └── stats.ts       # Statistics tracking
+│   ├── cosmetic/
+│   │   └── cosmetics.ts   # Visual rendering
+│   └── api/
+│       └── ask.ts         # Frontend API client
 ├── api/
-│   ├── ask.py         # Flask endpoint for AI coach
+│   ├── ask.py             # Flask endpoint for AI coach
 │   └── requirements.txt
-├── index.html         # Entry point
-├── vite.config.ts     # Vite config
-├── tsconfig.json      # TypeScript config
-└── package.json       # Node dependencies
+├── index.html             # Entry point
+├── vite.config.ts         # Vite config
+├── tsconfig.json          # TypeScript config
+└── package.json           # Node dependencies
 ```
 
 Frontend built with Vite + TypeScript. Backend uses Flask to proxy requests to Claude API.

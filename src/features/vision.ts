@@ -1,6 +1,6 @@
 import { PoseLandmarker, HandLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
 import { POSE } from '../types';
-import { getElement } from './shared';
+import { getElement } from '../shared';
 import { analyzePosture, updatePostureUI } from './posture';
 import { recordObservation, updateInsightsUI } from './insights';
 import { freqToNote } from './audio';

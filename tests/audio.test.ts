@@ -1,4 +1,4 @@
-import { freqToNote, noteToFreq } from '../src/helpers/audio';
+import { freqToNote, noteToFreq } from '../src/features/audio';
 
 // Tests for audio.ts
 // - freqToNote(): converts frequency (Hz) to note info (name, octave, cents deviation)

@@ -1,5 +1,5 @@
 import { Insight, Observation, NoteInfo, PostureFlags } from '../types';
-import { getElement } from './shared';
+import { getElement } from '../shared';
 
 // Functions in this file:
 //	 - recordObservation() - exported, logs pitch + posture

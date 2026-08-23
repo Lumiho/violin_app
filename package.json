@@ -6,17 +6,25 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
-  "keywords": ["violin", "tuner", "music", "practice"],
+  "keywords": [
+    "violin",
+    "tuner",
+    "music",
+    "practice"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "jsdom": "^29.1.1",
     "typescript": "^7.0.2",
-    "vite": "^8.2.1"
+    "vite": "^8.2.1",
+    "vitest": "^4.1.11"
   },
   "dependencies": {
-    "pitchy": "^4.1.0",
-    "@mediapipe/tasks-vision": "^0.10.18"
+    "@mediapipe/tasks-vision": "^0.10.18",
+    "pitchy": "^4.1.0"
   }
 }

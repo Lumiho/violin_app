@@ -3,7 +3,7 @@ vi.mock('../src/helpers/shared', () => ({
 	getElement: vi.fn(() => document.createElement('div'))
 }));
 
-import { recordObservation, clearObservations } from '../src/helpers/insights';
+import { recordObservation, clearObservations } from '../src/features/insights';
 
 // Tests for insights.ts
 // - recordObservation(): logs pitch + posture data to rolling observation window

@@ -56,7 +56,7 @@ vi.mock('@mediapipe/tasks-vision', () => ({
 	}))
 }));
 
-import { isVisionRunning, setVisionCallbacks } from '../src/helpers/vision';
+import { isVisionRunning, setVisionCallbacks } from '../src/features/vision';
 
 // Tests for vision.ts
 // - isVisionRunning(): returns current vision loop state

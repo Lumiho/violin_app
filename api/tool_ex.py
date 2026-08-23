@@ -42,7 +42,7 @@ for message in runner:
 
 {
     question: string,
-    pitch_stats: ???,
+    noteStats: ???,
     posture: ???,
     correlations: ???,
     session_history: ???

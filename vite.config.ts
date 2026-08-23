@@ -1,12 +1,16 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  root: '.',
-  publicDir: 'public',
-  build: {
-    outDir: 'dist',
-  },
-  server: {
-    open: true,  // auto-open browser
-  },
+	test: {
+		globals: true,
+		environment: 'jsdom'
+	},
+	root: '.',
+	publicDir: 'public',
+	build: {
+	outDir: 'dist',
+	},
+	server: {
+	open: true,  // auto-open browser
+	},
 })

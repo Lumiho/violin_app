@@ -1,5 +1,5 @@
 import { NoteStats, NoteAccuracyData } from '../types';
-import { getElement } from './shared';
+import { getElement } from '../shared';
 
 // Functions in this file:
 //	 - loadAccuracyData() - exported, loads accuracy data from localStorage

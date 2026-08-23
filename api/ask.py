@@ -12,7 +12,9 @@ client = Anthropic(
 def ask():
 	data = request.get_json() # get data from frontend first
 	question = data.get('question')
-	
+	noteStats = data.get('noteStats') 
+	posture = data.get('posture') 
+ 
 	# anthropic sdk docs say this is how to send/receive.
 	# here we ask our question to the llm and receive it as message var
 	message = client.messages.create(
@@ -20,7 +22,11 @@ def ask():
 		messages=[
 			{
 				"role": "user",
-				"content": question,
+				"content": f"""
+							Question: {question}
+							-	NoteStats: {noteStats}
+							-	Posture: {posture}
+							""",
 			}
 		],
 		model="claude-sonnet-4-20250514",

@@ -3,7 +3,7 @@ vi.mock('../src/helpers/shared', () => ({
 	getElement: vi.fn(() => document.createElement('div'))
 }));
 
-import { analyzePosture } from '../src/helpers/posture';
+import { analyzePosture } from '../src/features/posture';
 
 // Tests for posture.ts
 // - analyzePosture(): detects shoulder raise, wrist collapse, and violin droop from landmarks

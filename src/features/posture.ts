@@ -1,4 +1,4 @@
-import { getElement } from './shared';
+import { getElement } from '../shared';
 import { Landmark, PostureFlags, POSE, postureState } from '../types';
 
 // Functions in this file:

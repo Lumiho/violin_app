@@ -13,7 +13,7 @@ import {
 	clearAccuracyData,
 	recordPitchAccuracy,
 	getNoteStats
-} from '../src/helpers/stats';
+} from '../src/features/stats';
 
 // Tests for stats.ts
 // - recordPitchAccuracy(): records pitch samples for each note

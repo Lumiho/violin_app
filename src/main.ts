@@ -1,4 +1,4 @@
-import './styles.css';
+import './cosmetic/styles.css';
 import { PitchDetector } from 'pitchy';
 import { PitchReading } from './types'
 import { loadAccuracyData, saveAccuracyData, recordPitchAccuracy, updateStatsUI } from './features/stats';
@@ -48,6 +48,7 @@ const tipsPanelEl = getElement<HTMLDivElement>('tips-panel');
 // Fingerboard elements
 const fingerboardWrap = getElement<HTMLDivElement>('fingerboard-wrap');
 const fbLabelsToggle = getElement<HTMLButtonElement>('fb-labels-toggle');
+const cameraToggleBtn = getElement<HTMLButtonElement>('camera-toggle');
 
 // ----------------------------------------- STATE -------------------------------------------------
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -72,8 +73,9 @@ let stableNote: string | null = null;
 let stableOctave: number | null = null;
 let lastNoteChangeTime = 0;
 
-// Current phase: "pitch" | "posture" | "stats"
-let currentPhase = 'pitch';
+// Current phase: "setup" | "practice" | "feedback"
+let currentPhase = 'setup';
+let cameraEnabled = false;
 
 // ---------- A4 calibration ----------
 getElement('a-up').onclick = () => { a4 = Math.min(446, a4 + 1); aVal.textContent = String(a4); setA4(a4); updateDroneFreq(); };
@@ -201,6 +203,26 @@ fbLabelsToggle.onclick = () => {
 	}
 };
 
+// Camera toggle for practice tab
+cameraToggleBtn.onclick = async () => {
+	cameraEnabled = !cameraEnabled;
+	cameraToggleBtn.classList.toggle('active', cameraEnabled);
+
+	if (cameraEnabled) {
+		cameraPanel.classList.remove('hidden');
+		postureFlags.classList.remove('hidden');
+		if (!isVisionRunning()) {
+			await startVision();
+		}
+	} else {
+		cameraPanel.classList.add('hidden');
+		postureFlags.classList.add('hidden');
+		if (isVisionRunning()) {
+			stopVision();
+		}
+	}
+};
+
 window.addEventListener('resize', () => {
 	if (noteLabelsVisible) {
 		generateNoteLabels();
@@ -223,34 +245,36 @@ function switchPhase(phase: string): void {
   currentPhase = phase;
   phaseTabs.forEach(t => t.classList.toggle('active', t.dataset.phase === phase));
 
-  const showCamera = phase === 'posture';
-  const showMeter = phase === 'pitch';
-  const showFlags = phase === 'posture';
-  const showInsights = phase === 'posture';
-  const showStats = phase === 'stats';
-  const showFingerboard = phase === 'pitch';
+  // Setup: just the meter for tuning
+  // Practice: fingerboard + optional camera
+  // Feedback: stats panel
+  const showMeter = phase === 'setup';
+  const showFingerboard = phase === 'practice';
+  const showCamera = phase === 'practice' && cameraEnabled;
+  const showFlags = phase === 'practice' && cameraEnabled;
+  const showInsights = phase === 'practice';
+  const showFeedback = phase === 'feedback';
 
   cameraPanel.classList.toggle('hidden', !showCamera);
   meterShell.classList.toggle('hidden', !showMeter);
   postureFlags.classList.toggle('hidden', !showFlags);
   insightsPanel.classList.toggle('hidden', !showInsights);
-  statsPanel.classList.toggle('hidden', !showStats);
+  statsPanel.classList.toggle('hidden', !showFeedback);
   fingerboardWrap.classList.toggle('hidden', !showFingerboard);
-  document.getElementById('strings')!.classList.toggle('hidden', phase === 'posture' || phase === 'stats');
-  document.querySelector('.controls')!.classList.toggle('hidden', phase === 'stats');
+  document.getElementById('strings')!.classList.toggle('hidden', phase !== 'setup');
+  document.querySelector('.controls')!.classList.toggle('hidden', phase === 'feedback');
 
-  if (showCamera && !isVisionRunning() && running) {
-	startVision();
-  }
-
-  if (showStats) {
+  if (showFeedback) {
 	updateStatsUI();
   }
 }
 
 phaseTabs.forEach(tab => {
-  tab.onclick = () => switchPhase(tab.dataset.phase ?? 'pitch');
+  tab.onclick = () => switchPhase(tab.dataset.phase ?? 'setup');
 });
+
+// Set initial phase state on load
+switchPhase('setup');
 
 // Store last pitch data for correlation (used by vision module)
 let lastPitch = 0;
@@ -414,6 +438,7 @@ function loop(): void {
 
 		  if (now - lastAccuracyRecord > 200) {
 			recordPitchAccuracy(bufName, bufOctave, avgCents);
+			enableAskCoach();
 			lastAccuracyRecord = now;
 		  }
 
@@ -441,15 +466,28 @@ function loop(): void {
 // ---------- Ask button ----------
 const askBtn = getElement<HTMLButtonElement>('ask-btn');
 const askResponse = getElement<HTMLDivElement>('ask-response');
+let sessionHasData = false;
+
+// Start disabled until user plays something
+askBtn.disabled = true;
+askBtn.title = 'Play some notes first';
+
+export function enableAskCoach(): void {
+  if (!sessionHasData) {
+    sessionHasData = true;
+    askBtn.disabled = false;
+    askBtn.title = '';
+  }
+}
 
 askBtn.onclick = async () => {
-  askBtn.disabled = true;                    // prevent double-clicks
+  askBtn.disabled = true;
   askBtn.textContent = 'Thinking...';
-  askResponse.textContent = '';              // clear previous response
+  askResponse.textContent = '';
 
   try {
-    const response = await ask();            // call the API
-    askResponse.textContent = response;      // show the response
+    const response = await ask();
+    askResponse.textContent = response;
   } catch (err) {
     askResponse.textContent = 'Error getting response. Is the server running?';
     console.error(err);

@@ -69,6 +69,9 @@ import { NoteInfo, PitchReading, PostureFlags } from './types'
 - Route path becomes `/api/filename` (e.g., `/api/ask`)
 
 ### Flask basics
+
+flask --app ask run
+
 ```python
 from flask import Flask, jsonify, request
 

@@ -17,9 +17,9 @@
   </header>
 
   <div class="phase-tabs">
-    <button class="phase-tab active" data-phase="pitch">Pitch</button>
-    <button class="phase-tab" data-phase="posture">Posture</button>
-    <button class="phase-tab" data-phase="stats">Stats</button>
+    <button class="phase-tab active" data-phase="setup">Setup</button>
+    <button class="phase-tab" data-phase="practice">Practice</button>
+    <button class="phase-tab" data-phase="feedback">Feedback</button>
   </div>
 
   <div class="stage">
@@ -57,6 +57,7 @@
       <div class="fingerboard-label">
         Fingerboard
         <button class="fb-labels-toggle" id="fb-labels-toggle" title="Show note names">♪</button>
+        <button class="camera-toggle" id="camera-toggle" title="Toggle posture camera">📷</button>
       </div>
       <div class="fingerboard-row">
         <span class="pill pill-vertical">
@@ -146,6 +147,32 @@
         </div>
       </div>
 
+      <!-- Drone generator (coach can control) -->
+      <div class="drone-panel">
+        <div class="drone-header">
+          <label for="drone-note">Reference Drone</label>
+          <select id="drone-note" class="drone-select">
+            <optgroup label="Open Strings">
+              <option value="G3">G</option>
+              <option value="D4">D</option>
+              <option value="A4" selected>A</option>
+              <option value="E5">E</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="C4">C</option>
+              <option value="F4">F</option>
+              <option value="Bb4">B♭</option>
+              <option value="Eb4">E♭</option>
+            </optgroup>
+          </select>
+          <button class="drone-toggle" id="drone-toggle">Off</button>
+        </div>
+        <div class="drone-volume">
+          <label>Volume</label>
+          <input type="range" id="drone-volume" min="0" max="100" value="30" />
+        </div>
+      </div>
+
       <!-- Ask Coach Button -->
       <div class="ask-coach">
         <button class="ask-btn" id="ask-btn">Ask Coach</button>
@@ -196,31 +223,24 @@
           <li>Chrome/Edge work better than Safari</li>
         </ul>
       </div>
-    </div>
 
-    <!-- Drone generator -->
-    <div class="drone-panel">
-      <div class="drone-header">
-        <label for="drone-note">Reference Drone</label>
-        <select id="drone-note" class="drone-select">
-          <optgroup label="Open Strings">
-            <option value="G3">G</option>
-            <option value="D4">D</option>
-            <option value="A4" selected>A</option>
-            <option value="E5">E</option>
-          </optgroup>
-          <optgroup label="Other">
-            <option value="C4">C</option>
-            <option value="F4">F</option>
-            <option value="Bb4">B♭</option>
-            <option value="Eb4">E♭</option>
-          </optgroup>
-        </select>
-        <button class="drone-toggle" id="drone-toggle">Off</button>
+      <div class="tip-section">
+        <h5>Camera Position</h5>
+        <ul>
+          <li><span class="tip-highlight">3-6 feet</span> away — full upper body visible</li>
+          <li>Camera at <span class="tip-highlight">chest height</span> or slightly above</li>
+          <li>Face the camera — bow arm and left hand both visible</li>
+          <li>Tripod or stable surface works best</li>
+        </ul>
       </div>
-      <div class="drone-volume">
-        <label>Volume</label>
-        <input type="range" id="drone-volume" min="0" max="100" value="30" />
+
+      <div class="tip-section">
+        <h5>Lighting for Posture</h5>
+        <ul>
+          <li>Light your <span class="tip-highlight">front</span>, not your back (avoid silhouettes)</li>
+          <li>Even lighting helps — avoid harsh shadows on face/arms</li>
+          <li>Natural daylight or soft room lighting works well</li>
+        </ul>
       </div>
     </div>
   </div>

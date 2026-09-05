@@ -86,17 +86,22 @@ Track your progress over time:
 - **"Notes to Practice"** section highlights your problem areas
 - **Persistent storage** — stats saved to localStorage across sessions
 
-### AI Coach
-Ask questions about your practice and get personalized feedback:
-- **"Ask Coach" button** in the Stats tab sends your data to Claude
+### AI Coach (Agentic)
+An AI coach that can analyze your playing and take actions:
+- **"Ask Coach" button** in the Feedback tab sends your data for analysis
 - Analyzes your pitch accuracy data and current posture flags
-- Provides contextual advice based on your playing patterns
-- Powered by Claude API via Flask backend
+- **Agentic tools**: coach can control the drone (set note, volume, toggle on/off)
+- Structured JSON response format enables automated actions
+- Powered by Gemini API (free tier) via Flask backend
 
 ### User Interface
-- **Tabbed layout**: Pitch / Posture / Insights / Stats
+- **Three-tab layout**:
+  - **Setup**: Tuning meter for A4 calibration
+  - **Practice**: Fingerboard visualization + optional camera toggle
+  - **Feedback**: Stats, drone controls, AI coach
+- **Camera toggle**: Enable posture tracking on-demand in Practice tab
 - **Dark, warm aesthetic** designed for low-light practice rooms
-- **Responsive design** works on desktop and tablets
+- **Responsive design** works on desktop and mobile
 - **Single-page app** — no navigation, no distractions
 
 ## Getting Started
@@ -116,10 +121,10 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Set your API key:
+Set your API key (get one free at https://aistudio.google.com/apikey):
 ```bash
-set ANTHROPIC_API_KEY=your-key-here   # Windows
-# export ANTHROPIC_API_KEY=your-key   # Mac/Linux
+set GEMINI_API_KEY=your-key-here   # Windows
+# export GEMINI_API_KEY=your-key   # Mac/Linux
 ```
 
 Run Flask:
@@ -177,7 +182,7 @@ flask --app ask run
 |-----------|------------|
 | Frontend | TypeScript + Vite |
 | Backend | Flask (Python) |
-| AI | Anthropic Claude API |
+| AI | Google Gemini API (free tier) |
 | Audio Input | Web Audio API (`getUserMedia` + `AnalyserNode`) |
 | Pitch Detection | [pitchy](https://github.com/ianprime0509/pitchy) (McLeod Pitch Method) |
 | Computer Vision | [MediaPipe Tasks Vision](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker) |
@@ -194,7 +199,7 @@ flask --app ask run
 
 **Backend (pip):**
 - `flask` - Web framework
-- `anthropic` - Claude API SDK
+- `google-generativeai` - Gemini API SDK
 
 ## Architecture
 
@@ -225,13 +230,13 @@ resonance/
 └── package.json           # Node dependencies
 ```
 
-Frontend built with Vite + TypeScript. Backend uses Flask to proxy requests to Claude API.
+Frontend built with Vite + TypeScript. Backend uses Flask to proxy requests to Gemini API.
 
 ## Contributing
 
 Contributions are welcome! Some ideas for future development:
 
-- [ ] AI coach tools (set drone, adjust metronome, start drills)
+- [x] AI coach tools (set drone, adjust metronome, start drills)
 - [ ] PWA support for offline use
 - [ ] Recording and playback of practice sessions
 - [ ] Scale and arpeggio practice modes

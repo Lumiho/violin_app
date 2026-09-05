@@ -96,3 +96,11 @@ export function setA4(freq: number): void {
 export function isDroneActive(): boolean {
 	return droneActive;
 }
+
+export function toggleDrone(): void {
+	if (droneActive) {
+		stopDrone();
+	} else {
+		startDrone();
+	}
+}

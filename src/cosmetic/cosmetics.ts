@@ -210,3 +210,63 @@ export function clearFingerboard(): void {
   fbMarker.classList.remove('visible', 'in-tune', 'off');
   fbStrings.forEach(s => s.classList.remove('active-string'));
 }
+
+// ---------- Scale trainer dots ----------
+const fbScaleDots = getElement<HTMLDivElement>('fb-scale-dots');
+const STRING_INDEX: Record<string, number> = { 'G': 0, 'D': 1, 'A': 2, 'E': 3 };
+
+export function renderScaleDots(
+  notes: { string: string; position: number }[],
+  targetIndex: number,
+  completedIndices: Set<number>
+): void {
+  fbScaleDots.innerHTML = '';
+
+  const fbRect = fingerboard.getBoundingClientRect();
+  const guidesEl = document.querySelector('.fb-position-guides')!;
+  const guideDivs = guidesEl.querySelectorAll('.fb-guide');
+  const guidesRect = guidesEl.getBoundingClientRect();
+
+  const linePositions: number[] = [];
+  guideDivs.forEach((div) => {
+    const divRect = div.getBoundingClientRect();
+    linePositions.push(divRect.top - guidesRect.top);
+  });
+  linePositions.push(guidesRect.height);
+
+  function getFingerY(finger: number): number {
+    const floor = Math.floor(finger);
+    const frac = finger - floor;
+    const y1 = linePositions[floor] ?? 0;
+    const y2 = linePositions[floor + 1] ?? linePositions[linePositions.length - 1] ?? 0;
+    return y1 + frac * (y2 - y1);
+  }
+
+  const topPadding = guidesRect.top - fbRect.top;
+
+  notes.forEach((note, index) => {
+    const stringIndex = STRING_INDEX[note.string];
+    if (stringIndex === undefined) return;
+
+    const targetString = fbStrings[stringIndex];
+    if (!targetString) return;
+
+    const stringRect = targetString.getBoundingClientRect();
+    const stringCenterX = stringRect.left + stringRect.width / 2 - fbRect.left;
+    const y = topPadding + getFingerY(note.position);
+
+    const dot = document.createElement('div');
+    dot.className = 'fb-scale-dot';
+    if (index === targetIndex) dot.classList.add('target');
+    if (completedIndices.has(index)) dot.classList.add('completed');
+
+    dot.style.left = stringCenterX + 'px';
+    dot.style.top = y + 'px';
+
+    fbScaleDots.appendChild(dot);
+  });
+}
+
+export function clearScaleDots(): void {
+  fbScaleDots.innerHTML = '';
+}

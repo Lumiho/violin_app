@@ -17,9 +17,13 @@
   --neon-green:   #00ff9d;
   --neon-lime:    #88ff44;
   --neon-blue:    #4466ff;
+  --neon-magenta: #ff44aa;
+  --neon-gold:    #ffcc00;
   --glow-cyan:    rgba(0, 229, 255, 0.5);
   --glow-green:   rgba(0, 255, 157, 0.5);
   --glow-lime:    rgba(136, 255, 68, 0.5);
+  --glow-magenta: rgba(255, 68, 170, 0.5);
+  --glow-gold:    rgba(255, 204, 0, 0.5);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -983,7 +987,11 @@ footer a:hover {
   text-transform: uppercase;
   color: var(--ink-faint);
   margin-bottom: 8px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 .fingerboard-row {
   display: flex;
@@ -1072,14 +1080,14 @@ footer a:hover {
   font-family: "Fraunces", serif;
   font-style: italic;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 800;
   color: var(--ink-soft);
   z-index: 2;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   padding: 4px 8px;
   border-radius: 4px;
   border: 1px solid rgba(0, 229, 255, 0.3);
-  text-shadow: 0 0 8px var(--glow-cyan);
+  text-shadow: 0 0 2px var(--glow-cyan);
   transition: all 0.15s ease;
 }
 .fb-string.active-string .fb-string-name {
@@ -1112,19 +1120,23 @@ footer a:hover {
 }
 .fb-note-label {
   position: absolute;
-  font-size: 9px;
+  font-size: 11px;
   font-family: "Spline Sans Mono", monospace;
   color: var(--neon-cyan);
-  opacity: 0.5;
+  opacity: 0.6;
   transform: translateY(-50%);
   white-space: nowrap;
   text-shadow: 0 0 5px var(--glow-cyan);
 }
 .fb-note-label.sharp {
-  font-size: 8px;
-  opacity: 0.35;
+  font-size: 9px;
+  opacity: 0.45;
   color: var(--neon-green);
   text-shadow: 0 0 5px var(--glow-green);
+  display: none;
+}
+.fb-note-labels.show-sharps .fb-note-label.sharp {
+  display: block;
 }
 .fb-labels-toggle {
   font-family: inherit;
@@ -1149,6 +1161,11 @@ footer a:hover {
   color: var(--bg);
   box-shadow: 0 0 10px var(--glow-cyan);
 }
+.fb-labels-toggle.active-full {
+  background: var(--neon-green);
+  border-color: var(--neon-green);
+  box-shadow: 0 0 10px var(--glow-green);
+}
 
 /* Camera toggle button */
 .camera-toggle {
@@ -1172,6 +1189,102 @@ footer a:hover {
   border-color: var(--neon-magenta);
   color: var(--bg);
   box-shadow: 0 0 10px var(--glow-magenta);
+}
+
+/* Scale trainer controls */
+.scale-trainer-controls {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-left: 8px;
+}
+.scale-select {
+  font-family: inherit;
+  font-size: 10px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  color: var(--ink-faint);
+  padding: 3.5px 6px;
+  cursor: pointer;
+  outline: none;
+}
+.scale-select.has-value {
+  color: var(--ink);
+}
+.scale-select:hover {
+  color: var(--ink);
+  border-color: var(--glow-gold);
+  background: rgba(255,255,255,0.03);
+}
+.scale-select:focus {
+  background: rgba(255,255,255,0.05);
+}
+.scale-select option {
+  background: #1a1410;
+  color: #f5efe6;
+}
+.scale-toggle {
+  font-family: inherit;
+  font-size: 11px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--neon-cyan);
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 28px;
+  min-height: 22px;
+}
+.scale-toggle:disabled {
+  color: var(--ink-faint);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.scale-toggle:hover:not(:disabled) {
+  background: var(--glow-cyan);
+  border-color: var(--neon-gold);
+}
+.scale-toggle.active {
+  color: var(--neon-magenta);
+}
+.scale-toggle.active:hover {
+  background: var(--glow-magenta);
+}
+
+/* Scale note dots on fingerboard */
+.fb-scale-dots {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.fb-scale-dot {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: transparent;
+  transform: translate(-55%, -55%);
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  border: 2px solid var(--glow-magenta);
+  opacity: 0.9;
+}
+.fb-scale-dot.target {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.4);
+  border: 2px solid var(--neon-gold);
+  box-shadow: 0 0 8px var(--glow-gold);
+  border-width: 2px;
+}
+.fb-scale-dot.completed {
+  opacity: 0.4;
+  border-color: var(--neon-green);
 }
 
 /* Position guide lines */

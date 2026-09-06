@@ -6,8 +6,9 @@ import { startVision, stopVision, isVisionRunning, setVisionCallbacks } from './
 import { startDrone, stopDrone, updateDroneFreq, setDroneVolume, setDroneNote, setA4, isDroneActive } from './features/drone';
 import { getElement, getElements, canvas, ctx, droneToggle, droneVolumeInput, fbNoteLabels } from './shared';
 import { freqToNote } from './features/audio';
-import { drawMeter, generateNoteLabels, clearFingerboard, updateFingerboard } from './cosmetic/cosmetics';
+import { drawMeter, generateNoteLabels, clearFingerboard, updateFingerboard, renderScaleDots, clearScaleDots } from './cosmetic/cosmetics';
 import { ask } from './api/ask';
+import { startScale, stopScale, getCurrentScale, getCurrentTargetNote, markNoteCompleted, getCompletedNotes, getCurrentNoteIndex, isScaleComplete, resetScale } from './features/scales';
 
 // ---------- accuracy thresholds (cents) ----------
 // const CENTS_PERFECT = 5;    // Perfect intonation (green glow)
@@ -50,6 +51,10 @@ const fingerboardWrap = getElement<HTMLDivElement>('fingerboard-wrap');
 const fbLabelsToggle = getElement<HTMLButtonElement>('fb-labels-toggle');
 const cameraToggleBtn = getElement<HTMLButtonElement>('camera-toggle');
 
+// Scale trainer elements
+const scaleSelect = getElement<HTMLSelectElement>('scale-select');
+const scaleToggleBtn = getElement<HTMLButtonElement>('scale-toggle');
+
 // ----------------------------------------- STATE -------------------------------------------------
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 let audioCtx: AudioContext | null = null;
@@ -76,6 +81,11 @@ let lastNoteChangeTime = 0;
 // Current phase: "setup" | "practice" | "feedback"
 let currentPhase = 'setup';
 let cameraEnabled = false;
+
+// Scale trainer state
+let scaleMode = false;
+let scaleNoteHoldTime = 0;
+const SCALE_HOLD_THRESHOLD = 800; // ms to hold note before advancing
 
 // ---------- A4 calibration ----------
 getElement('a-up').onclick = () => { a4 = Math.min(446, a4 + 1); aVal.textContent = String(a4); setA4(a4); updateDroneFreq(); };
@@ -192,13 +202,19 @@ tipsToggleEl.onclick = () => {
 };
 
 // ---------- Note labels on fingerboard ----------
-
-let noteLabelsVisible = false;
+// 0 = off, 1 = naturals only, 2 = all notes (including sharps)
+let noteLabelMode = 0;
 fbLabelsToggle.onclick = () => {
-	noteLabelsVisible = !noteLabelsVisible;
-	fbLabelsToggle.classList.toggle('active', noteLabelsVisible);
-	fbNoteLabels.classList.toggle('visible', noteLabelsVisible);
-	if (noteLabelsVisible && fbNoteLabels.children.length === 0) {
+	noteLabelMode = (noteLabelMode + 1) % 3;
+
+	// Update visibility classes
+	fbNoteLabels.classList.toggle('visible', noteLabelMode > 0);
+	fbNoteLabels.classList.toggle('show-sharps', noteLabelMode === 2);
+	fbLabelsToggle.classList.toggle('active', noteLabelMode > 0);
+	fbLabelsToggle.classList.toggle('active-full', noteLabelMode === 2);
+
+	// Generate labels (must be after visibility is set so getBoundingClientRect works)
+	if (noteLabelMode > 0) {
 		generateNoteLabels();
 	}
 };
@@ -223,9 +239,63 @@ cameraToggleBtn.onclick = async () => {
 	}
 };
 
+// Scale select change - update text contrast and auto-stop if running
+scaleSelect.onchange = () => {
+	const hasValue = scaleSelect.value !== '';
+	scaleSelect.classList.toggle('has-value', hasValue);
+
+	// Enable/disable play button based on selection
+	scaleToggleBtn.disabled = !hasValue;
+
+	// Auto-stop current scale if one is running
+	if (scaleMode) {
+		scaleMode = false;
+		stopScale();
+		scaleToggleBtn.classList.remove('active');
+		scaleToggleBtn.textContent = '▶';
+		clearScaleDots();
+	}
+};
+
+// Scale trainer toggle
+scaleToggleBtn.onclick = () => {
+	if (!scaleMode) {
+		const scaleId = scaleSelect.value;
+		if (!scaleId) return;
+
+		const scale = startScale(scaleId);
+		if (scale) {
+			scaleMode = true;
+			scaleToggleBtn.classList.add('active');
+			scaleToggleBtn.textContent = '■';
+			updateScaleDots();
+		}
+	} else {
+		scaleMode = false;
+		stopScale();
+		scaleToggleBtn.classList.remove('active');
+		scaleToggleBtn.textContent = '▶';
+		clearScaleDots();
+	}
+};
+
+function updateScaleDots(): void {
+	const scale = getCurrentScale();
+	if (!scale) return;
+
+	renderScaleDots(
+		scale.notes.map(n => ({ string: n.string, position: n.position })),
+		getCurrentNoteIndex(),
+		getCompletedNotes()
+	);
+}
+
 window.addEventListener('resize', () => {
-	if (noteLabelsVisible) {
+	if (noteLabelMode > 0) {
 		generateNoteLabels();
+	}
+	if (scaleMode) {
+		updateScaleDots();
 	}
 });
 
@@ -443,6 +513,29 @@ function loop(): void {
 		  }
 
 		  updateFingerboard(bufName, bufOctave, avgCents);
+
+		  // Scale trainer: check if playing target note
+		  if (scaleMode) {
+			const target = getCurrentTargetNote();
+			if (target) {
+			  const playingTarget = bufName === target.note && bufOctave === target.octave;
+			  const inTune = Math.abs(avgCents) < 15;
+
+			  if (playingTarget && inTune) {
+				scaleNoteHoldTime += 16;
+				if (scaleNoteHoldTime >= SCALE_HOLD_THRESHOLD) {
+				  markNoteCompleted();
+				  scaleNoteHoldTime = 0;
+				  if (isScaleComplete()) {
+					resetScale();
+				  }
+				  updateScaleDots();
+				}
+			  } else {
+				scaleNoteHoldTime = 0;
+			  }
+			}
+		  }
 		}
 	  }
 	}
@@ -503,3 +596,6 @@ fitCanvas();
 drawMeter(0, false);
 loadAccuracyData();
 updateStatsUI();
+
+// Scale play button disabled until scale is selected
+scaleToggleBtn.disabled = true;

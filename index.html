@@ -58,6 +58,17 @@
         Fingerboard
         <button class="fb-labels-toggle" id="fb-labels-toggle" title="Show note names">♪</button>
         <button class="camera-toggle" id="camera-toggle" title="Toggle posture camera">📷</button>
+        <span class="scale-trainer-controls">
+          <select id="scale-select" class="scale-select">
+            <option value="">Scale Train</option>
+            <option value="G-major">G Major</option>
+            <option value="D-major">D Major</option>
+            <option value="A-major">A Major</option>
+            <option value="A-minor">A Minor</option>
+            <option value="E-minor">E Minor</option>
+          </select>
+          <button class="scale-toggle" id="scale-toggle" title="Start scale trainer">▶</button>
+        </span>
       </div>
       <div class="fingerboard-row">
         <span class="pill pill-vertical">
@@ -95,6 +106,7 @@
           <div class="fb-guide"><span class="fb-guide-label">4</span></div>
         </div>
         <div class="fb-note-labels" id="fb-note-labels"></div>
+        <div class="fb-scale-dots" id="fb-scale-dots"></div>
         <div class="fb-finger-marker" id="fb-marker">
           <div class="fb-orb">
             <span class="fb-finger-label" id="fb-finger-num"></span>

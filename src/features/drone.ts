@@ -1,6 +1,6 @@
 import { noteToFreq } from './audio';
 import { droneToggle, droneVolumeInput } from '../shared';
-import { DroneOscillator} from '../types';
+import { DroneOscillator, DroneNote } from '../types';
 
 // Functions in this file:
 // - startDrone() - exported, starts the drone sound
@@ -15,7 +15,14 @@ let droneCtx: AudioContext | null = null;
 let droneOscillators: DroneOscillator[] = [];
 let droneGain: GainNode | null = null;
 let droneActive = false;
-let selectedDroneNote = 'A4';
+let selectedDroneNote: DroneNote = { note: 'A', octave: 4, accidental: '♮' };
+
+// Build a note string ("G#3", "Bb4", "A4") that noteToFreq understands.
+// The accidental UI uses glyphs; map them to the regex-friendly forms.
+function droneNoteToString(d: DroneNote): string {
+	const acc = d.accidental === '♯' ? '#' : d.accidental === '♭' ? 'b' : '';
+	return `${d.note}${acc}${d.octave}`;
+}
 
 // ---------- Drone generator ----------
 export function startDrone(): void {
@@ -26,7 +33,7 @@ export function startDrone(): void {
   droneGain.gain.value = parseInt(droneVolumeInput.value) / 100 * 0.3;
   droneGain.connect(droneCtx.destination);
 
-  const freq = noteToFreq(selectedDroneNote, a4);
+  const freq = noteToFreq(droneNoteToString(selectedDroneNote), a4);
 
   const harmonics = [
 	{ ratio: 1, gain: 1.0 },
@@ -73,7 +80,7 @@ export function stopDrone(): void {
 
 export function updateDroneFreq(): void {
 	if (!droneActive || !droneCtx) return;
-		const freq = noteToFreq(selectedDroneNote, a4);
+		const freq = noteToFreq(droneNoteToString(selectedDroneNote), a4);
 		droneOscillators.forEach(({ osc, ratio }) => {
 		osc.frequency.setValueAtTime(freq * ratio, droneCtx!.currentTime);
 	});
@@ -85,7 +92,7 @@ export function setDroneVolume(volume: number): void {
 	}
 }
 
-export function setDroneNote(note: string): void {
+export function setDroneNote(note: DroneNote): void {
 	selectedDroneNote = note;
 }
 

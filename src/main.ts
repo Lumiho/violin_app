@@ -1,6 +1,6 @@
 import './cosmetic/styles.css';
 import { PitchDetector } from 'pitchy';
-import { PitchReading } from './types'
+import { PitchReading, DroneNote} from './types'
 import { loadAccuracyData, saveAccuracyData, recordPitchAccuracy, updateStatsUI } from './features/stats';
 import { startVision, stopVision, isVisionRunning, setVisionCallbacks } from './features/vision';
 import { startDrone, stopDrone, updateDroneFreq, setDroneVolume, setDroneNote, setA4, isDroneActive } from './features/drone';
@@ -29,6 +29,8 @@ const flagShoulder = getElement<HTMLSpanElement>('flag-shoulder');
 const flagWrist = getElement<HTMLSpanElement>('flag-wrist');
 const flagViolin = getElement<HTMLSpanElement>('flag-violin');
 const droneNoteSelect = getElement<HTMLSelectElement>('drone-note');
+const droneAccidentalSelect = getElement<HTMLSelectElement>('drone-accidental');
+const droneOctaveSelect = getElement<HTMLSelectElement>('drone-octave');
 const cameraPanel = getElement<HTMLDivElement>('camera-panel');
 const postureFlags = getElement<HTMLDivElement>('posture-flags');
 const meterShell = getElement<HTMLDivElement>('meter-shell');
@@ -70,6 +72,10 @@ let a4 = 440;
 let displayCents = 0;
 let targetCents = 0;
 let hasPitch = false;
+
+// Reset Grace Period
+const GRACE_MS = 150;
+let lastGoodTime = 0;
 
 // Pitch buffer for stability
 const pitchBuffer: PitchReading[] = [];
@@ -187,8 +193,15 @@ metroToggle.onclick = () => {
 droneToggle.onclick = () => isDroneActive() ? stopDrone() : startDrone();
 
 droneNoteSelect.onchange = () => {
-  setDroneNote(droneNoteSelect.value);
-  updateDroneFreq();
+
+	const d: DroneNote = {
+		note: droneNoteSelect.value,
+		accidental: droneAccidentalSelect.value,
+		octave: parseInt(droneOctaveSelect.value, 10),
+	}
+	
+	setDroneNote(d);
+	updateDroneFreq();
 };
 
 droneVolumeInput.oninput = () => {
@@ -379,7 +392,7 @@ async function start(): Promise<void> {
 
   const highPass = audioCtx.createBiquadFilter();
   highPass.type = 'highpass';
-  highPass.frequency.value = 150;
+  highPass.frequency.value = 90;
   highPass.Q.value = 0.7;
 
   const lowPass = audioCtx.createBiquadFilter();
@@ -396,7 +409,7 @@ async function start(): Promise<void> {
 
   buf = new Float32Array(analyser.fftSize);
   detector = PitchDetector.forFloat32Array(analyser.fftSize);
-  detector.minVolumeDecibels = -34;
+  detector.minVolumeDecibels = -20;
 
   running = true;
   toggle.textContent = 'Stop';
@@ -450,7 +463,7 @@ function loop(): void {
   analyser.getFloatTimeDomainData(buf);
   const [pitch, clarity] = detector.findPitch(buf, audioCtx.sampleRate);
 
-  if (clarity > 0.93 && pitch > 60 && pitch < 4500) {
+  if (clarity > 0.92 && pitch > 60 && pitch < 4500) {
 	const { name, octave, cents } = freqToNote(pitch, a4);
 
 	pitchBuffer.push({ name, octave, cents, pitch });
@@ -465,46 +478,71 @@ function loop(): void {
 	const [topNote, topCount] = sortedNotes[0] ?? ['', 0];
 
 	const now = Date.now();
+	lastGoodTime = now;
+
 	if (topCount >= Math.ceil(PITCH_BUFFER_SIZE / 2)) {
 	  const noteMatch = topNote.match(/^([A-G]#?)(\d)$/);
 	  if (noteMatch && noteMatch[1] && noteMatch[2]) {
 		const bufName = noteMatch[1];
 		const bufOctave = parseInt(noteMatch[2]);
 
+		// Pitch "stickiness" — reject spurious octave errors (sub-harmonic OR
+		// harmonic, i.e. one octave below or above the held note) by requiring
+		// stronger evidence before switching. Both directions occur on low
+		// strings: e.g. A3 on the G string flips to A4 (its 2nd harmonic).
+		// Post-processing heuristic from pitch-tracking practice
+		// (McLeod & Wyvill, "A Smarter Way to Find Pitch", 2005).
+		const isOctaveJump =
+		  stableNote !== null &&
+		  stableOctave !== null &&
+		  bufName === stableNote &&
+		  Math.abs(bufOctave - stableOctave) === 1;
+
+		const dominance = topCount / pitchBuffer.length;         // 0..1, how unanimous the buffer is
+		const needTime  = isOctaveJump ? 300 : 150;              // longer debounce for an octave jump
+		const needVotes = isOctaveJump ? dominance > 0.7 : true; // super-majority for an octave jump
+
 		const isNewNote = bufName !== stableNote || bufOctave !== stableOctave;
-		if (!isNewNote || now - lastNoteChangeTime > 150) {
-		  if (isNewNote) {
+
+		if (!isNewNote || (now - lastNoteChangeTime > needTime && needVotes)) {
+			if (isNewNote) {
 			stableNote = bufName;
 			stableOctave = bufOctave;
 			lastNoteChangeTime = now;
-		  }
+			}
 
-		  const matchingReadings = pitchBuffer.filter(p => p.name === bufName && p.octave === bufOctave);
-		  const avgCents = matchingReadings.reduce((s, p) => s + p.cents, 0) / matchingReadings.length;
-		  const avgPitch = matchingReadings.reduce((s, p) => s + p.pitch, 0) / matchingReadings.length;
+		const matchingReadings = pitchBuffer.filter(p => p.name === bufName && p.octave === bufOctave);
+		// Median (not mean) of cents — rejects outlier frames so the flat/sharp
+		// reading stays steady on noisy low notes like the open G string.
+		const sortedCents = matchingReadings.map(p => p.cents).sort((a, b) => a - b);
+		const mid = Math.floor(sortedCents.length / 2);
+		const avgCents = sortedCents.length % 2
+		  ? (sortedCents[mid] ?? 0)
+		  : ((sortedCents[mid - 1] ?? 0) + (sortedCents[mid] ?? 0)) / 2;
+		const avgPitch = matchingReadings.reduce((s, p) => s + p.pitch, 0) / matchingReadings.length;
 
-		  hasPitch = true;
-		  lastPitch = avgPitch;
-		  lastCents = avgCents;
-		  targetCents = Math.max(-50, Math.min(50, avgCents));
+		hasPitch = true;
+		lastPitch = avgPitch;
+		lastCents = avgCents;
+		targetCents = Math.max(-50, Math.min(50, avgCents));
 
-		  const acc = bufName.includes('#');
-		  noteEl.innerHTML =
-			`${bufName[0]}${acc ? '<span class="acc">♯</span>' : ''}<span class="oct">${bufOctave}</span>`;
-		  const dir = avgCents > 0 ? 'sharp' : avgCents < 0 ? 'flat' : 'true';
-		  const mag = Math.abs(avgCents) < 5 ? 'in tune' : `${Math.abs(Math.round(avgCents))}¢ ${dir}`;
-		  centsEl.textContent = mag;
-		  freqEl.textContent = avgPitch.toFixed(1) + ' Hz';
-		  readout.classList.remove('idle');
+		const acc = bufName.includes('#');
+		noteEl.innerHTML =
+		`${bufName[0]}${acc ? '<span class="acc">♯</span>' : ''}<span class="oct">${bufOctave}</span>`;
+		const dir = avgCents > 0 ? 'sharp' : avgCents < 0 ? 'flat' : 'true';
+		const mag = Math.abs(avgCents) < 5 ? 'in tune' : `${Math.abs(Math.round(avgCents))}¢ ${dir}`;
+		centsEl.textContent = mag;
+		freqEl.textContent = avgPitch.toFixed(1) + ' Hz';
+		readout.classList.remove('idle');
 
-		  const a = Math.abs(avgCents);
-		  noteEl.style.color = a < 5 ? 'var(--green)' : a < 18 ? 'var(--amber)' : 'var(--red)';
+		const a = Math.abs(avgCents);
+		noteEl.style.color = a < 5 ? 'var(--green)' : a < 18 ? 'var(--amber)' : 'var(--red)';
 
-		  strings.forEach(s => {
-			const sf = parseFloat(s.dataset.f ?? '0');
-			const lit = Math.abs(1200 * Math.log2(avgPitch / sf)) < 45;
-			s.classList.toggle('lit', lit);
-		  });
+		strings.forEach(s => {
+		const sf = parseFloat(s.dataset.f ?? '0');
+		const lit = Math.abs(1200 * Math.log2(avgPitch / sf)) < 45;
+		s.classList.toggle('lit', lit);
+		});
 
 		  if (now - lastAccuracyRecord > 200) {
 			recordPitchAccuracy(bufName, bufOctave, avgCents);
@@ -538,8 +576,8 @@ function loop(): void {
 		  }
 		}
 	  }
-	}
-  } else {
+	} // reset block below
+  } else if(Date.now() - lastGoodTime > GRACE_MS) {
 	if (pitchBuffer.length > 0) pitchBuffer.length = 0;
 	hasPitch = false;
 	stableNote = null;

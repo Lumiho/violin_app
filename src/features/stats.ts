@@ -86,18 +86,23 @@ export function getNoteStats(): NoteStats[] {
 	return noteStats;
 }
 
-// ---------- UI Functions ----------
-export function updateStatsUI(): void {
+// helper 
+function getRelevantNotes(): string[]{
+	// Emit a full 12-note octave for each of octaves 3–6. With the 12-column
+	// grid, this puts each octave on its own row (4 octaves → 4 rows).
 	const relevantNotes: string[] = [];
 	const noteOrder = ['G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#'];
-	for (let oct = 3; oct <= 5; oct++) {
+	for (let oct = 3; oct <= 6; oct++) {
 		for (const n of noteOrder) {
-			if (oct === 3 && noteOrder.indexOf(n) < noteOrder.indexOf('G')) continue;
-			if (oct === 5 && noteOrder.indexOf(n) > noteOrder.indexOf('E')) continue;
 			relevantNotes.push(n + oct);
 		}
 	}
-	relevantNotes.push('E6');
+	return relevantNotes;
+}
+
+// ---------- UI Functions ----------
+export function updateStatsUI(): void {
+	const relevantNotes = getRelevantNotes();
 
 	noteGrid.innerHTML = '';
 	let totalSamples = 0;
@@ -105,14 +110,17 @@ export function updateStatsUI(): void {
 	let totalCentsSum = 0;
 
 	for (const noteKey of relevantNotes) {
+		// create note cells, later put onto the noteGrid element that shows up in UI
 		const cell = document.createElement('div');
 		cell.className = 'note-cell';
 
 		const data = noteAccuracyData[noteKey];
-		const noteName = noteKey.replace(/\d/, '');
-		const isSharp = noteName.includes('#');
 
-		cell.innerHTML = `<span class="note-name">${isSharp ? noteName[0] + '♯' : noteName}</span>`;
+		const isSharp = noteKey.includes('#');
+		const letter = noteKey.replace(/[0-9]/g, '');
+		const octave = noteKey.replace(/[^0-9]/g, '');
+
+		cell.innerHTML = `<span class="note-name">${isSharp ? letter[0] + '♯' : letter[0]}<sub>${octave}</sub></span>`;
 
 		if (data && data.samples.length > 0) {
 			const samples = data.samples;

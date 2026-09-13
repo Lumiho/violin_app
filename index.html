@@ -162,19 +162,30 @@
       <!-- Drone generator (coach can control) -->
       <div class="drone-panel">
         <div class="drone-header">
-          <label for="drone-note">Reference Drone</label>
+          <label for="drone-note">REFERENCE DRONE</label>
           <select id="drone-note" class="drone-select">
             <optgroup label="Open Strings">
-              <option value="G3">G</option>
-              <option value="D4">D</option>
-              <option value="A4" selected>A</option>
-              <option value="E5">E</option>
+              <option value="G">G</option>
+              <option value="A" selected>A</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+              <option value="F">F</option>              
             </optgroup>
-            <optgroup label="Other">
-              <option value="C4">C</option>
-              <option value="F4">F</option>
-              <option value="Bb4">B♭</option>
-              <option value="Eb4">E♭</option>
+          </select>
+          <select id="drone-accidental" class="drone-select">
+            <optgroup label="Accidental">
+              <option value="♯">♯</option>
+              <option value="♮" selected>♮</option>
+              <option value="♭">♭</option>
+            </optgroup>
+          </select>
+          <select id="drone-octave" class="drone-select">
+            <optgroup label="Octave">
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
             </optgroup>
           </select>
           <button class="drone-toggle" id="drone-toggle">Off</button>

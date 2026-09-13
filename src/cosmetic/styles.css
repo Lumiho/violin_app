@@ -619,10 +619,10 @@ footer a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 .drone-header label {
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -632,7 +632,8 @@ footer a:hover {
   font-size: 11px;
   letter-spacing: .1em;
   text-transform: uppercase;
-  padding: 6px 14px;
+  padding: 6px 10px;
+  margin-left: 4px;
   border-radius: 3px;
   border: 1px solid var(--line);
   background: transparent;
@@ -652,8 +653,8 @@ footer a:hover {
   animation: droneActive 1s ease-in-out infinite alternate;
 }
 @keyframes droneActive {
-  0% { box-shadow: 0 0 15px var(--glow-lime), 0 0 30px var(--glow-lime); }
-  100% { box-shadow: 0 0 20px var(--glow-lime), 0 0 45px var(--glow-lime); }
+  0% { box-shadow: 0 0 10px var(--glow-lime), 0 0 20px var(--glow-lime); }
+  100% { box-shadow: 0 0 15px var(--glow-lime), 0 0 30px var(--glow-lime); }
 }
 .drone-select {
   font-family: "Fraunces", serif;
@@ -664,13 +665,30 @@ footer a:hover {
   background: var(--bg-2);
   color: var(--ink);
   cursor: pointer;
-  min-width: 80px;
+  min-width: 70px;
 }
 .drone-select:focus {
   outline: none;
   border-color: var(--neon-lime);
   box-shadow: 0 0 10px var(--glow-lime);
 }
+/* Drone note selector boxes — skeletons, style as needed */
+#drone-note {
+  background-color: var(--glow-cyan);
+  color: #050508;
+
+}
+#drone-accidental {
+  background-color: var(--neon-magenta);
+    color: #050508;
+
+}
+#drone-octave {
+  background-color: var(--green);
+  color: #050508;
+
+}
+
 .drone-volume {
   display: flex;
   align-items: center;

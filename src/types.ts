@@ -5,6 +5,12 @@ export interface NoteInfo {
   cents: number;
 }
 
+export interface DroneNote {
+  note: string;
+  octave: number;
+  accidental: string;
+}
+
 export interface NoteStats{
   note: string;
   avg: number;
@@ -100,22 +106,23 @@ export const noteToPosition: Record<string, FingerPosition> = {
   'F4': { string: 1, finger: 1.5 },
   'F#4': { string: 1, finger: 2 },
   'G4': { string: 1, finger: 3 },
-  'G#4': { string: 1, finger: 4 },
+  'G#4': { string: 1, finger: 3.5 },
   'A4': { string: 2, finger: 0 },
   'A#4': { string: 2, finger: 0.5 },
   'B4': { string: 2, finger: 1 },
   'C5': { string: 2, finger: 1.5 },
   'C#5': { string: 2, finger: 2 },
   'D5': { string: 2, finger: 3 },
-  'D#5': { string: 2, finger: 4 },
+  'D#5': { string: 2, finger: 3.5 },
   'E5': { string: 3, finger: 0 },
   'F5': { string: 3, finger: 0.5 },
   'F#5': { string: 3, finger: 1 },
   'G5': { string: 3, finger: 1.5 },
   'G#5': { string: 3, finger: 2 },
   'A5': { string: 3, finger: 3 },
-  'A#5': { string: 3, finger: 4 },
-  'B5': { string: 3, finger: 4.5 },
+  'A#5': { string: 3, finger: 3.5 },
+  'B5': { string: 3, finger: 4 },
+  'C6': { string: 3, finger: 4.5 },
 };
 
 export const stringNotes = [

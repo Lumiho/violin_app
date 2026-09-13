@@ -192,17 +192,19 @@ metroToggle.onclick = () => {
 // --------------------------- Drone ---------------------------
 droneToggle.onclick = () => isDroneActive() ? stopDrone() : startDrone();
 
-droneNoteSelect.onchange = () => {
-
+const onDroneNoteChange = () => {
 	const d: DroneNote = {
 		note: droneNoteSelect.value,
 		accidental: droneAccidentalSelect.value,
 		octave: parseInt(droneOctaveSelect.value, 10),
 	}
-	
 	setDroneNote(d);
 	updateDroneFreq();
 };
+
+droneNoteSelect.onchange = onDroneNoteChange;
+droneAccidentalSelect.onchange = onDroneNoteChange;
+droneOctaveSelect.onchange = onDroneNoteChange;
 
 droneVolumeInput.oninput = () => {
   setDroneVolume(parseInt(droneVolumeInput.value));
